@@ -1,13 +1,15 @@
 package com.wzy.aball.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
+
+import com.wzy.aball.R;
 
 
 public class FloatBallView extends View {
@@ -22,6 +24,9 @@ public class FloatBallView extends View {
 
     private String mPercent = "50%";
 
+    private Bitmap mDragBitmap;
+    private boolean isDrag;
+
     public FloatBallView(Context context) {
         this(context, null);
     }
@@ -33,6 +38,14 @@ public class FloatBallView extends View {
     public FloatBallView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initPaints();
+        initDragBitmap();
+    }
+
+    private void initDragBitmap() {
+        Bitmap srcBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.mingren);
+        mDragBitmap =
+                Bitmap.createScaledBitmap(srcBitmap, FLOAT_BALL_WIDTH, FLOAT_BALL_HEIGHT, true);
+        srcBitmap.recycle();
     }
 
     private void initPaints() {
@@ -65,7 +78,7 @@ public class FloatBallView extends View {
 
         if (mode == MeasureSpec.EXACTLY) {
             res = size;
-        } else if (mode == MeasureSpec.AT_MOST){
+        } else if (mode == MeasureSpec.AT_MOST) {
             res = Math.min(defaultSize, size);
         } else {
             res = defaultSize;
@@ -76,11 +89,14 @@ public class FloatBallView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        // draw circle
-        canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2, mBallPaint);
-
-        // draw text
-        drawCenterText(canvas);
+        if (isDrag) {
+            canvas.drawBitmap(mDragBitmap, 0, 0, null);
+        } else {
+            // draw circle
+            canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2, mBallPaint);
+            // draw text
+            drawCenterText(canvas);
+        }
     }
 
     private void drawCenterText(Canvas canvas) {
@@ -88,5 +104,10 @@ public class FloatBallView extends View {
         Paint.FontMetricsInt fm = mTextPaint.getFontMetricsInt();
         float baselineY = (mHeight - fm.descent - fm.ascent) / 2;
         canvas.drawText(mPercent, centerX, baselineY, mTextPaint);
+    }
+
+    public void setDragState(boolean isDrag) {
+        this.isDrag = isDrag;
+        invalidate();
     }
 }
