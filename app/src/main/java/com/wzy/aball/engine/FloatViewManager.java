@@ -1,7 +1,9 @@
 package com.wzy.aball.engine;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -10,12 +12,17 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.wzy.aball.view.FloatBallView;
+import com.wzy.aball.view.FloatMenuLayout;
+
+import java.lang.reflect.Field;
 
 public class FloatViewManager {
     private static final String TAG = FloatViewManager.class.getSimpleName();
     private static final float MOVE_DISTANCE = 50;
     private static FloatViewManager mInstance;
     private final int mWindowWidth;
+    private final int mWindowHeight;
+    private final int mStatusBarHeight;
     private Context mContext;
     private WindowManager mWindowManager;
     private FloatBallView mFloatBallView;
@@ -23,11 +30,14 @@ public class FloatViewManager {
     private float mStartY;
     private WindowManager.LayoutParams params;
     private float mInitX;
+    private FloatMenuLayout mFloatMenuLayout;
 
 
     private FloatViewManager(Context context) {
         this.mContext = context;
         this.mWindowWidth = context.getResources().getDisplayMetrics().widthPixels;
+        this.mWindowHeight = context.getResources().getDisplayMetrics().heightPixels;
+        this.mStatusBarHeight = getStatusBarHeight();
         this.mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         this.mFloatBallView = new FloatBallView(context);
         this.mFloatBallView.setOnTouchListener(new View.OnTouchListener() {
@@ -74,8 +84,30 @@ public class FloatViewManager {
             @Override
             public void onClick(View v) {
                 Toast.makeText(mContext, "点击小球", Toast.LENGTH_SHORT).show();
+                mWindowManager.removeView(mFloatBallView);
+                showFloatMenuLayout();
             }
         });
+
+        mFloatMenuLayout = new FloatMenuLayout(mContext);
+    }
+
+    private void showFloatMenuLayout() {
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+        params.width = mWindowWidth;
+        params.height = mWindowHeight - mStatusBarHeight;
+        Log.e(TAG, "showFloatMenuLayout: width=" + params.width + ", height=" + params.height
+                + ", Screen height=" + mWindowHeight + ", status height=" + mStatusBarHeight);
+        params.gravity = Gravity.BOTTOM | Gravity.START;
+        params.x = 0;
+        params.y = 0;
+        params.type = WindowManager.LayoutParams.TYPE_PHONE;
+        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+        params.format = PixelFormat.RGBA_8888;
+
+        mWindowManager.addView(mFloatMenuLayout, params);
+        mFloatMenuLayout.startTransAnimation();
     }
 
     public static FloatViewManager getInstance(Context context) {
@@ -90,18 +122,41 @@ public class FloatViewManager {
     }
 
     public void showFloatBall() {
-        params = new WindowManager.LayoutParams();
-        params.width = FloatBallView.FLOAT_BALL_WIDTH;
-        params.height = FloatBallView.FLOAT_BALL_HEIGHT;
-        params.gravity = Gravity.TOP | Gravity.LEFT;
-        params.x = 0;
-        params.y = 0;
-        params.type = WindowManager.LayoutParams.TYPE_PHONE;
-        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-        params.format = PixelFormat.RGBA_8888;
-
+        if (params == null) {
+            params = new WindowManager.LayoutParams();
+            params.width = FloatBallView.FLOAT_BALL_WIDTH;
+            params.height = FloatBallView.FLOAT_BALL_HEIGHT;
+            params.gravity = Gravity.TOP | Gravity.START;
+            params.x = 0;
+            params.y = 0;
+            params.type = WindowManager.LayoutParams.TYPE_PHONE;
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+            params.format = PixelFormat.RGBA_8888;
+        }
         Log.e(TAG, "showFloatBall: width=" + params.width + ", height = " + params.height);
+        if (mFloatBallView.getParent() != null) {
+            mWindowManager.removeView(mFloatBallView);
+        }
         mWindowManager.addView(mFloatBallView, params);
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    public int getStatusBarHeight() {
+        try {
+            Class<?> clazz = Class.forName("com.android.internal.R$dimen");
+            Field field = clazz.getField("status_bar_height");
+            field.setAccessible(true);
+            int x = (int) field.get(0);
+            return mContext.getResources().getDimensionPixelSize(x);
+        } catch (ClassNotFoundException | IllegalAccessException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public WindowManager getWindowManager() {
+        return mWindowManager;
     }
 }
