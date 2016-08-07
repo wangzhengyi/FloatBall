@@ -13,8 +13,6 @@ import com.wzy.aball.service.BackViewService;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Button mButton;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +23,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        mButton = (Button) findViewById(R.id.id_btn);
+        Button mButton = (Button) findViewById(R.id.id_btn);
+        assert mButton != null;
         mButton.setOnClickListener(new OnClickListener() {
 
             @Override

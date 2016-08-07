@@ -16,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-
 public class BallProgressView extends View {
     public static final int WIDTH = 500;
     public static final int HEIGHT = 500;
@@ -24,12 +23,16 @@ public class BallProgressView extends View {
     private Paint mCirclePaint;
     private Paint mProgressPaint;
     private Paint mTextPaint;
+
     private Canvas mBitmapCanvas;
+    private Bitmap mBitmap;
 
     private Path mPath;
+
+    private int mInitProgress = 0;
     private int mCurrentProgress = 50;
     private int mMaxProgress = 100;
-    private Bitmap mBitmap;
+
     private GestureDetector mGestureDetector;
     private Handler mHandle = new Handler() {
         @Override
@@ -37,7 +40,7 @@ public class BallProgressView extends View {
             super.handleMessage(msg);
         }
     };
-    private int mInitProgress = 0;
+
     private Runnable mDoubleTapTask = new Runnable() {
         @Override
         public void run() {
@@ -51,6 +54,7 @@ public class BallProgressView extends View {
             }
         }
     };
+
     private int count = 50;
     private Runnable mSingleTapTask = new Runnable() {
         @Override
@@ -198,5 +202,18 @@ public class BallProgressView extends View {
 
     private void startDoubleTapAnimation() {
         mHandle.postDelayed(mDoubleTapTask, 50);
+    }
+
+    @SuppressWarnings("unused")
+    public void setMaxProgress(int max) {
+        mMaxProgress = max;
+        invalidate();
+    }
+
+    @SuppressWarnings("unused")
+    public void setCurrentProgress(int curProgress) {
+        mCurrentProgress = curProgress;
+        mInitProgress = 0;
+        invalidate();
     }
 }

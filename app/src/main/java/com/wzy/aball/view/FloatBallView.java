@@ -110,4 +110,10 @@ public class FloatBallView extends View {
         this.isDrag = isDrag;
         invalidate();
     }
+
+    @SuppressWarnings("unused")
+    public void setPercent(int percent) {
+        mPercent = String.valueOf(percent);
+        invalidate();
+    }
 }
